@@ -15,22 +15,13 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\event.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\move.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\object.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\draw.cpp">
+    <ClCompile Include="..\objects.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\menu.cpp">
@@ -39,24 +30,24 @@
     <ClCompile Include="..\collision.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\events.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\render.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\noise.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gui.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\event.h">
-      <Filter>Resource Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\move.h">
-      <Filter>Resource Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\object.h">
-      <Filter>Resource Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\stdafx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\draw.h">
+    <ClInclude Include="..\objects.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
     <ClInclude Include="..\menu.h">
@@ -65,7 +56,16 @@
     <ClInclude Include="..\collision.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\events.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\render.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
     <ClInclude Include="..\noise.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gui.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
   </ItemGroup>

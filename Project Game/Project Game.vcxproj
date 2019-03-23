@@ -30,6 +30,7 @@
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
+    <CLRSupport>true</CLRSupport>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -70,8 +71,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>C:\Users\dbert\source\repos\Steampunk-Game\Steampunk-Game\SDL2-2.0.8-win32-x64;C:\Users\dbert\source\repos\Steampunk-Game\Steampunk-Game\SDL2_image-2.0.3-win32-x86;C:\Users\dbert\source\repos\Steampunk-Game\Steampunk-Game\SDL .h Files;C:\Users\dbert\source\repos\Steampunk-Game\Steampunk-Game\SDL2_ttf-2.0.15-win32-x86;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\dbert\source\repos\Steampunk-Game\Steampunk-Game\SDL2-devel-2.0.8-VC\SDL2-2.0.8\lib\x86;C:\Users\dbert\source\repos\Steampunk-Game\Steampunk-Game\SDL2_image-devel-2.0.3-VC\SDL2_image-2.0.3\lib\x86;C:\Users\dbert\source\repos\Steampunk-Game\Steampunk-Game\SDL2_ttf-devel-2.0.15-VC\SDL2_ttf-2.0.15\lib\x86;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Users\dbert\source\repos\Project Game\Project Game\SDL Things\SDL2-2.0.8-win32-x64;C:\Users\dbert\source\repos\Project Game\Project Game\SDL Things\SDL2_image-2.0.3-win32-x86;C:\Users\dbert\source\repos\Project Game\Project Game\SDL Things\SDL2_ttf-2.0.15-win32-x86;C:\Users\dbert\source\repos\Project Game\Project Game\SDL Things\SDL .h Files;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\dbert\source\repos\Project Game\Project Game\SDL Things\SDL2-devel-2.0.8-VC\SDL2-2.0.8\lib\x86;C:\Users\dbert\source\repos\Project Game\Project Game\SDL Things\SDL2_image-devel-2.0.3-VC\SDL2_image-2.0.3\lib\x86;C:\Users\dbert\source\repos\Project Game\Project Game\SDL Things\SDL2_ttf-devel-2.0.15-VC\SDL2_ttf-2.0.15\lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -123,23 +124,23 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\collision.cpp" />
-    <ClCompile Include="..\draw.cpp" />
-    <ClCompile Include="..\event.cpp" />
+    <ClCompile Include="..\events.cpp" />
+    <ClCompile Include="..\gui.cpp" />
     <ClCompile Include="..\main.cpp" />
     <ClCompile Include="..\menu.cpp" />
-    <ClCompile Include="..\move.cpp" />
-    <ClCompile Include="..\object.cpp" />
     <ClCompile Include="..\noise.cpp" />
+    <ClCompile Include="..\objects.cpp" />
+    <ClCompile Include="..\render.cpp" />
     <ClCompile Include="..\stdafx.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\collision.h" />
-    <ClInclude Include="..\draw.h" />
-    <ClInclude Include="..\event.h" />
+    <ClInclude Include="..\events.h" />
+    <ClInclude Include="..\gui.h" />
     <ClInclude Include="..\menu.h" />
-    <ClInclude Include="..\move.h" />
-    <ClInclude Include="..\object.h" />
     <ClInclude Include="..\noise.h" />
+    <ClInclude Include="..\objects.h" />
+    <ClInclude Include="..\render.h" />
     <ClInclude Include="..\stdafx.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
