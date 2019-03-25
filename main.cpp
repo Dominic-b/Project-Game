@@ -14,12 +14,17 @@ int main(int argc, char args[]) {
 	std::vector<Enemy> enemies;
 	std::vector<Projectile> enemyProjectiles;
 	std::vector<Projectile> playerProjectiles;
+	std::vector<Particle> particles;
 
 	bool spawned = false;
 
 	//Asteroid test(player.node.x, player.node.y);
 	//asteroids.push_back(test);
 	Enemy testboi(renderer, 0, 0, 1);
+
+	SDL_Texture* playerProjectile = render.loadTexture("Assets/Images/playerProjectile.png", renderer);
+	SDL_Texture* enemyProjectile = render.loadTexture("Assets/Images/enemyProjectile.png", renderer);
+	SDL_Texture* particle = render.loadTexture("Assets/Images/particle.png", renderer);
 
 	Background background(renderer);
 	Gui gui(renderer);
@@ -28,8 +33,13 @@ int main(int argc, char args[]) {
 	events.quit = false;
 	events.inGame = false;
 
-	long int lastTime = 0;
-	long int lastTime2 = 0;
+	int enemyType = 1;
+
+	int lastTime = 0;
+	int lastTime2 = 0;
+
+	int progression = 0;
+	int level = 0;
 
 	while (!events.quit) {
 		SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
@@ -49,43 +59,68 @@ int main(int argc, char args[]) {
 
 			events.update(e);
 
+			if (progression > 100) {
+				level++;
+				progression -= 100;
+			}
+
 			if (player.hit) {
-				lastTime2 = time(nullptr);
+				lastTime2 = (int)time(nullptr);
 				player.invincible = true;
-			} else if (lastTime2 == time(nullptr) - player.invincibility) {
+			} else if (lastTime2 == (int)time(nullptr) - player.invincibility) {
 				player.invincible = false;
 			}
 
 
 			if (!spawned && time(nullptr) % 5 == 0) {
+				if (level > 1) {
+					enemyType = rand() % 3 + 1;
+				}
 				int enemyCount = rand() % 3 + 3;//between 3 and 5
 				for (int i = 0; i < enemyCount; i++) {
-					Enemy newEnemy(renderer, 0 + i, 0 + i, 2);
+					Enemy newEnemy(renderer, 0 + i, 0 + i, enemyType);
 					newEnemy.shooting = true;
 					enemies.push_back(newEnemy);
 				}
-				lastTime = time(nullptr);
+				lastTime = (int)time(nullptr);
 				spawned = true;
 			} else if (spawned && time(nullptr) == lastTime + 1) {
 				spawned = false;
 			}
 
 			player.move(e, events.mouseX + camera.x, events.mouseY + camera.y);
+			if (player.fire) {
+				player.shoot(playerProjectiles, renderer);
+			}
 			background.draw(renderer, camera);
 
-			for (int i = 0; i < std::size(asteroids); i++) {
+			for (unsigned int i = 0; i < std::size(asteroids); i++) {
 				asteroids[i].move();
 				if (!player.invincible) player.asteroidCollision(asteroids[i]);
 				asteroids[i].draw(renderer, camera);
 			}
 
-			for (int i = 0; i < std::size(enemies); i++) {
+			for (unsigned int i = 0; i < std::size(enemies); i++) {
 				enemies[i].move(player);
 				enemies[i].draw(renderer, camera);
+				for (unsigned int j = 0; j < std::size(playerProjectiles); j++) {
+					if (enemies[i].projectileCollision(playerProjectiles[j])) {
+						playerProjectiles.erase(playerProjectiles.begin() + j);
+						j--;
+						for (int e = 0; e < 4; e++) {
+							Particle newParticle;
+							newParticle.node.x = enemies[i].node.x;
+							newParticle.node.y = enemies[i].node.y;
+							newParticle.node.velX = (enemies[i].node.velX / 3) + rand() % 2 - 1;
+							newParticle.node.velY = (enemies[i].node.velY / 3) + rand() % 2 - 1;
+							particles.push_back(newParticle);
+						}
+					}
+				}
 				if (enemies[i].enemyType == 2) {
-					if (enemies[i].lastShotTime + enemies[i].fireRate == time(nullptr)) {
+					if (enemies[i].lastShotTime + enemies[i].fireRate == (int)time(nullptr)) {
 						enemies[i].shooting = true;
-						enemies[i].lastShotTime = time(nullptr);
+						enemies[i].lastShotTime = (int)time(nullptr);
 					}
 					if (enemies[i].shot) {
 						enemies[i].shoot(enemyProjectiles, renderer);
@@ -97,19 +132,51 @@ int main(int argc, char args[]) {
 					enemies[i].playerCollision(player);
 					player.projectileCollision(enemyProjectiles);
 				}
+				if (enemies[i].health <= 0) {
+					progression += enemies[i].value;
+					enemies.erase(enemies.begin() + i);
+					i--;
+				}
 			}
 			testboi.avoidEnemies(enemies);
 
-			for (int i = 0; i < std::size(enemyProjectiles); i++) {
+			for (unsigned int i = 0; i < std::size(enemyProjectiles); i++) {
 				enemyProjectiles[i].move();
-				enemyProjectiles[i].draw(renderer, camera);
+				enemyProjectiles[i].draw(renderer, camera, enemyProjectile, 16);
+				if (enemyProjectiles[i].timeAlive >= enemyProjectiles[i].lifeTime) {
+					enemyProjectiles.erase(enemyProjectiles.begin() + i);
+					i--;
+				}
+			}
+
+			for (unsigned int i = 0; i < std::size(playerProjectiles); i++) {
+				playerProjectiles[i].move();
+				playerProjectiles[i].draw(renderer, camera, playerProjectile, 32);
+				if (playerProjectiles[i].timeAlive >= playerProjectiles[i].lifeTime) {
+					playerProjectiles.erase(playerProjectiles.begin() + i);
+					i--;
+				}
+			}
+
+			for (unsigned int i = 0; i < std::size(particles); i++) {
+				particles[i].move();
+				particles[i].draw(renderer, camera, particle);
+				particles[i].timeAlive = (int)time(nullptr) - particles[i].OGTime;
+				if (particles[i].timeAlive >= particles[i].lifeTime) {
+					particles.erase(particles.begin() + i);
+					i--;
+				}
+			}
+
+			if (player.died) {
+				events.inGame = false;
 			}
 			
-			camera.move(player.node.x, player.node.y);
+			camera.move((int)player.node.x, (int)player.node.y);
 			player.draw(renderer, camera);
 
-			gui.drawHealth(renderer, player.health);
-			gui.drawProgression(renderer, 3, 60);
+			gui.drawHealth(renderer, (int)player.health);
+			gui.drawProgression(renderer, level, progression);
 
 			SDL_RenderPresent(renderer);
 		}

@@ -6,17 +6,17 @@ bool Collision::pointVsRect(int x, int y, SDL_Rect a) {
 }
 
 bool Collision::circleVsRect(int x, int y, int radius, SDL_Rect a) {
-	float closeX = x;
-	float closeY = y;
+	float closeX = (float)x;
+	float closeY = (float)y;
 
 	if (closeX > a.x) {
-		closeX = a.x;
+		closeX = (float)a.x;
 	} else if (closeX < a.x + a.w) {
-		closeX = a.x + a.w;
+		closeX = (float)a.x + a.w;
 	} if (closeY > a.y) {
-		closeY = a.y;
+		closeY = (float)a.y;
 	} else if (closeY < a.y + a.h) {
-		closeY = a.y + a.h;
+		closeY = (float)a.y + a.h;
 	}
 
 	float distX = x - closeX;

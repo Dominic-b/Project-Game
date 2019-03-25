@@ -15,8 +15,8 @@ const int screenWidth = 1920 / 3 *2;
 const int screenHeight = 1080 / 3 *2;
 static SDL_Rect screen = {0, 0, screenWidth, screenHeight};
 
-const double PI = 3.14159265359;
-const double TAU = 2 * PI;
+const float PI = (float)3.141592653;
+const float TAU = 2 * PI;
 
 #include "noise.h"
 static Noise noise;

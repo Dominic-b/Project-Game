@@ -37,7 +37,7 @@ float Noise::noise(float x) {
 	float n0, n1;   // Noise contributions from the two "corners"
 
 	// Corners coordinates (nearest integer values):
-	int32_t i0 = floor(x);
+	int32_t i0 = (int32_t)floor(x);
 	int32_t i1 = i0 + 1;
 	// Distances to corners (between 0 and 1):
 	float x0 = x - i0;
@@ -58,5 +58,5 @@ float Noise::noise(float x) {
 	// The maximum value of this noise is 8*(3/4)^4 = 2.53125
 	// A factor of 0.395 scales to fit exactly within [-1,1]
 	double a = 0.395f * (n0 + n1);
-	return a * 25 + 300;
+	return (float)a * (float)(25 + 300);
 }

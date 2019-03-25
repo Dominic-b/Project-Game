@@ -25,8 +25,8 @@ Background::Background(SDL_Renderer* renderer) {
 	for (int i = 0; i < points; i++) {
 		dist = rand() % (2 * radius) - radius;
 		angle = rand() % 360;
-		stars[i].x = dist * cos(angle);
-		stars[i].y = dist * sin(angle);
+		stars[i].x = (int)(dist * cos(angle));
+		stars[i].y = (int)(dist * sin(angle));
 		srand(dist - angle);
 	}
 }
@@ -62,7 +62,7 @@ Asteroid::Asteroid(float x, float y) {
 	node.mass = 100;
 	float dist;
 	float radians;
-	srand(time(nullptr));
+	srand((unsigned int)time(nullptr));
 	int random = rand() % 51 - 25;
 	for (int i = 0; i < points; i++) {
 		radians = i * (TAU / points);
@@ -77,9 +77,9 @@ Asteroid::Asteroid(float x, float y) {
 		lines[i].node1 = &nodes[i];
 		lines[i].node2 = &nodes[(i + 1) % points];
 	}
-	node.velX = (rand() % 100 - 50) / 10;
-	srand(time(nullptr));
-	node.velY = (rand() % 100 - 50) / 10;
+	node.velX = (float)(rand() % 100 - 50) / 10;
+	srand((unsigned int)time(nullptr));
+	node.velY = (float)(rand() % 100 - 50) / 10;
 }
 
 void Asteroid::move() {
@@ -95,7 +95,7 @@ void Asteroid::move() {
 
 void Asteroid::draw(SDL_Renderer* renderer, Camera camera) {
 	for (int i = 0; i < points; i++) {
-		SDL_RenderDrawLine(renderer, lines[i].node1->x - camera.x, lines[i].node1->y - camera.y, lines[i].node2->x - camera.x, lines[i].node2->y - camera.y);
+		SDL_RenderDrawLine(renderer, (int)(lines[i].node1->x - camera.x), (int)(lines[i].node1->y - camera.y), (int)(lines[i].node2->x - camera.x), (int)(lines[i].node2->y - camera.y));
 	}
 }
 
@@ -105,20 +105,35 @@ Projectile::Projectile(SDL_Renderer* renderer) {
 	angle = 0;
 	velocity = 12;
 
+	OGTime = (int)time(nullptr);
 	lifeTime = 10;
 	timeAlive = 0;
-
-	playerProjectile;
-	enemyProjectile = render.loadTexture("Assets/Images/enemyProjectile.png",renderer);
 }
 
 void Projectile::move() {
 	node.x += node.velX;
 	node.y += node.velY;
+
+	timeAlive = (int)time(nullptr) - OGTime;
 }
 
-void Projectile::draw(SDL_Renderer* renderer, Camera camera) {
-	render.render(renderer, enemyProjectile, node.x - camera.x, node.y - camera.y, 16, 16);
+void Projectile::draw(SDL_Renderer* renderer, Camera camera, SDL_Texture* texture, int diameter) {
+	render.renderEx(renderer, texture, (int)(node.x - camera.x), (int)(node.y - camera.y), diameter, diameter, (int)(angle * 180 / PI));
+}
+
+Particle::Particle() {
+	OGTime = (int)time(nullptr);
+	lifeTime = 3;
+	timeAlive = 0;
+}
+
+void Particle::move() {
+	node.x += node.velX;
+	node.y += node.velY;
+}
+
+void Particle::draw(SDL_Renderer* renderer, Camera camera, SDL_Texture* texture) {
+	render.render(renderer, texture, (int)(node.x - camera.x), (int)(node.y - camera.y), 4, 4);
 }
 
 Player::Player(SDL_Renderer* renderer) {
@@ -127,8 +142,14 @@ Player::Player(SDL_Renderer* renderer) {
 	node.velX, node.velY, node.forceX, node.forceY = 0;
 
 	health = 100;
-	invincibility = 3;
+	invincibility = 1;
 	invincible = false;
+	dying = false;
+	died = false;
+	frame = 0;
+	count = 0;
+	frames = 8;
+	framesPerFrame = 120;
 
 	node.mass = 1;
 
@@ -136,9 +157,14 @@ Player::Player(SDL_Renderer* renderer) {
 
 	angle = 0;
 
-	texture = render.loadTexture("Assets/Images/Player.png", renderer);
-	texture2 = render.loadTexture("Assets/Images/PlayerPt2.png", renderer);
+	weapon = 2;
+	lastFire = 0;
+	fireRate1 = 10;
+	fireRate2 = 50;
+	fireRate3 = 1;
 
+	texture = render.loadTexture("Assets/Images/Player.png", renderer);
+	spriteSheet = render.loadTexture("Assets/Images/PlayerDeath.png", renderer);
 }
 
 void Player::asteroidCollision(Asteroid &a) {
@@ -152,8 +178,8 @@ void Player::asteroidCollision(Asteroid &a) {
 }
 
 void Player::projectileCollision(std::vector<Projectile> &projectiles) {
-	for (int i = 0; i < std::size(projectiles); i++) {
-		if (collision.circleVsCircle(node.x, node.y, radius, projectiles[i].node.x, projectiles[i].node.y, 8)) {
+	for (unsigned int i = 0; i < std::size(projectiles); i++) {
+		if (collision.circleVsCircle((int)node.x, (int)node.y, radius, (int)projectiles[i].node.x, (int)projectiles[i].node.y, 8)) {
 			health -= 10;
 			hit = true;
 			projectiles[i].timeAlive = projectiles[i].timeAlive;
@@ -161,9 +187,55 @@ void Player::projectileCollision(std::vector<Projectile> &projectiles) {
 	}
 }
 
+void Player::shoot(std::vector<Projectile> &projectiles, SDL_Renderer* renderer) {
+	if (weapon == 1) {//blaster
+		if (lastFire >= fireRate1) {
+			Projectile newProjectile(renderer);
+			newProjectile.node.x = node.x;
+			newProjectile.node.y = node.y;
+			newProjectile.node.velX = node.velX + newProjectile.velocity * cos(angle - (90 + rand() % 10 - 4) * PI / 180);
+			newProjectile.node.velY = node.velY + newProjectile.velocity * sin(angle - (90 + rand() % 10 - 4) * PI / 180);
+			newProjectile.angle = angle;
+			projectiles.push_back(newProjectile);
+			lastFire = 0;
+		} else {
+			lastFire++;
+		}
+	} else if (weapon == 2) {//shotgun
+		if (lastFire >= fireRate2) {
+			for (int i = 0; i < 6; i++) {
+				Projectile newProjectile(renderer);
+				newProjectile.node.x = node.x;
+				newProjectile.node.y = node.y;
+				newProjectile.node.velX = node.velX + newProjectile.velocity * cos(angle - (90 + 5 * (i - 3)) * PI / 180);
+				newProjectile.node.velY = node.velY + newProjectile.velocity * sin(angle - (90 + 5 * (i - 3)) * PI / 180);
+				newProjectile.angle = angle;
+				projectiles.push_back(newProjectile);
+				lastFire = 0;
+			}
+		}
+		else {
+			lastFire++;
+		}
+	} else if (weapon == 3) {//laser
+
+	} else {//missiles
+
+	}
+}
+
 void Player::move(SDL_Event &e, int mX, int mY) {
 	if (health < 1) {
-		events.inGame = false;
+		dying = true;
+	}
+
+	if (dying) {
+		if (count = framesPerFrame) {
+
+		} else {
+			count++;
+		}
+
 	}
 
 	//key presses
@@ -171,19 +243,21 @@ void Player::move(SDL_Event &e, int mX, int mY) {
 	events.keyboard_state_array = SDL_GetKeyboardState(NULL);
 
 	if (events.keyboard_state_array[SDL_SCANCODE_W]) {
-		node.forceX += cos(angle - 90 * PI / 180);
-		node.forceY += sin(angle - 90 * PI / 180);
+		node.forceX += (float)cos(angle - 90 * PI / 180);
+		node.forceY += (float)sin(angle - 90 * PI / 180);
 	}
-	if (events.keyboard_state_array[SDL_SCANCODE_A]) angle -= .1;
+	if (events.keyboard_state_array[SDL_SCANCODE_A]) angle -= (float).1;
 	if (events.keyboard_state_array[SDL_SCANCODE_S]) {
-		node.forceX -= cos(angle - 90 * PI / 180);
-		node.forceY -= sin(angle - 90 * PI / 180);
+		node.forceX -= (float)cos(angle - 90 * PI / 180) / 5;
+		node.forceY -= (float)sin(angle - 90 * PI / 180) / 5;
 	}
-	if (events.keyboard_state_array[SDL_SCANCODE_D]) angle += .1;
+	if (events.keyboard_state_array[SDL_SCANCODE_D]) angle += (float).1;
 
+	fire = false;
 	if (events.keyboard_state_array[SDL_SCANCODE_SPACE]) {
-		node.velX *= .9;
-		node.velY *= .9;
+		fire = true;
+	} else if (health < 100) {
+		health += (float).2;
 	}
 
 	if (node.velX > 8) {
@@ -196,10 +270,12 @@ void Player::move(SDL_Event &e, int mX, int mY) {
 	} else if (node.velY < -8) {
 		node.velY = -8;
 	}
-	//angle = atan2(node.y - mY, node.x - mX) - 90 * PI / 180;
 
-	node.velX += node.forceX / node.mass;
-	node.velY += node.forceY / node.mass;
+	node.velX *= (float).99;
+	node.velY *= (float).99;
+
+	node.velX += (float)node.forceX / node.mass;
+	node.velY += (float)node.forceY / node.mass;
 	node.x += node.velX;
 	node.y += node.velY;
 
@@ -210,8 +286,21 @@ void Player::move(SDL_Event &e, int mX, int mY) {
 }
 
 void Player::draw(SDL_Renderer* renderer, Camera camera) {
-	render.render(renderer, texture, node.x - camera.x - radius, node.y - camera.y - radius, radius * 2, radius * 2);
-	render.renderEx(renderer, texture2, node.x - camera.x + 8 - radius, node.y - 16 - camera.y - radius, 16, 64, angle * 180 / PI);
+	if (!dying) {
+		render.renderEx(renderer, texture, (int)(node.x - camera.x - radius), (int)(node.y - camera.y - radius), radius * 2, radius * 2, (int)(angle * 180 / PI));
+	} else {
+		if (count >= framesPerFrame) {
+			count -= framesPerFrame;
+			if (frame >= frames) {
+				dying = false;
+				died = true;
+			}
+			frame++;
+		} else {
+			count++;
+		}
+		render.renderSheetEx(renderer, spriteSheet, (int)(node.x - camera.x - radius), (int)(node.y - camera.y - radius), 32 * frame, 0, 32, 32, 32, 32, (int)(angle * (180 / PI)));
+	}
 }
 
 Enemy::Enemy(SDL_Renderer* renderer, int x, int y, int type) {
@@ -220,45 +309,48 @@ Enemy::Enemy(SDL_Renderer* renderer, int x, int y, int type) {
 		texture = render.loadTexture("Assets/Images/Enemy1.png", renderer);
 		collider.w = 32;
 		collider.h = 16;
-		acceleration = .75;
+		acceleration = (float).75;
 		maxSpeed = 12;
-		turnSpeed = 7.5;
+		turnSpeed = (float)7.5;
 		health = 100;
+		value = 5;
 	} else if (enemyType == 2) {
 		texture = render.loadTexture("Assets/Images/Enemy2.png", renderer);
 		spriteSheet = render.loadTexture("Assets/Animations/Enemy2/Enemy2.png", renderer);
 		collider.w = 32;
 		collider.h = 32;
-		acceleration = .75;
+		acceleration = (float).75;
 		maxSpeed = 6;
-		turnSpeed = 6.66;
+		turnSpeed = (float)6.66;
 		health = 50;
 		framesPerFrame = 5;
 		frames = 7;
-		lastShotTime = time(nullptr);
+		lastShotTime = (int)time(nullptr);
 		fireRate = 3;
+		value = 7;
 	} else {
 		texture = render.loadTexture("Assets/Images/Enemy3.png", renderer);
 		collider.w = 32;
 		collider.h = 32;
-		acceleration = .5;
+		acceleration = (float).5;
 		maxSpeed = 6;
 		turnSpeed = 5;
 		health = 250;
+		value = 7;
 	}
-	srand(time(nullptr));
+	srand((unsigned int)time(nullptr));
 	x += rand() % 100 - 50;
 	y += rand() % 100 - 50;
-	node.x = x;
-	node.y = y;
-	collider.x = node.x;
-	collider.y = node.y;
+	node.x = (float)x;
+	node.y = (float)y;
+	collider.x = (int)node.x;
+	collider.y = (int)node.y;
 }
 
 void Enemy::move(Player player) {
 	shot = false;
-	target.x = player.node.x;
-	target.y = player.node.y;
+	target.x = (int)player.node.x;
+	target.y = (int)player.node.y;
 	optimalAngle = atan2(node.y - target.y, node.x - target.x) - 90 * PI / 180;
 
 	float difference = angle - optimalAngle;
@@ -270,9 +362,9 @@ void Enemy::move(Player player) {
 	}
 
 	if (difference < 0) {
-		angle += turnSpeed * PI / 180;
+		angle += (float)turnSpeed * PI / 180;
 	} else if (difference > 0) {
-		angle -= turnSpeed * PI / 180;
+		angle -= (float)turnSpeed * PI / 180;
 	}
 	if (enemyType == 1 || enemyType == 3) {
 		node.velX += acceleration * cos(angle - 90 * PI / 180);
@@ -297,12 +389,12 @@ void Enemy::move(Player player) {
 	}
 	node.x += node.velX;
 	node.y += node.velY;
-	collider.x = node.x;
-	collider.y = node.y;
+	collider.x = (int)node.x;
+	collider.y = (int)node.y;
 }
 
 void Enemy::playerCollision(Player &player) {
-	if (collision.circleVsRect(player.node.x, player.node.y, player.radius, collider)) {
+	if (collision.circleVsRect((int)(player.node.x), (int)(player.node.y), (int)(player.radius), collider)) {
 		player.health -= 25;
 		player.hit = true;
 	}
@@ -311,8 +403,8 @@ void Enemy::playerCollision(Player &player) {
 void Enemy::avoidEnemies(std::vector<Enemy> &enemies) {
 	float diffX;
 	float diffY;
-	for (int i = 0; i < std::size(enemies); i++) {
-		for (int j = i + 1; j < std::size(enemies); j++) {
+	for (unsigned int i = 0; i < std::size(enemies); i++) {
+		for (unsigned int j = i + 1; j < std::size(enemies); j++) {
 			diffX = enemies[i].node.x - enemies[j].node.x;
 			diffY = enemies[i].node.y - enemies[j].node.y;
 			if ((diffX * diffX) + (diffY * diffY) <= 9216) {//9216 is 96 squared
@@ -326,6 +418,14 @@ void Enemy::avoidEnemies(std::vector<Enemy> &enemies) {
 	}
 }
 
+bool Enemy::projectileCollision(Projectile &projectile) {
+	if (collision.circleVsRect((int)(projectile.node.x), (int)(projectile.node.y), 32, collider)) {
+		health -= 100;
+		return true;
+	}
+	return false;
+}
+
 void Enemy::shoot(std::vector<Projectile> &projectiles, SDL_Renderer* renderer) {
 	Projectile newProjectile(renderer);
 	newProjectile.node.x = node.x;
@@ -337,10 +437,10 @@ void Enemy::shoot(std::vector<Projectile> &projectiles, SDL_Renderer* renderer) 
 
 void Enemy::draw(SDL_Renderer* renderer, Camera camera) {
 	if (enemyType == 1) {
-		render.renderEx(renderer, texture, node.x - camera.x, node.y - camera.y, 32, 16, angle * (180 / PI));
+		render.renderEx(renderer, texture, (int)(node.x - camera.x), (int)(node.y - camera.y), 32, 16, (int)(angle * (180 / PI)));
 	} else if (enemyType == 2) {
 		if (!shooting) {
-			render.renderEx(renderer, texture, node.x - camera.x, node.y - camera.y, 32, 32, angle * (180 / PI));
+			render.renderEx(renderer, texture, (int)(node.x - camera.x), (int)(node.y - camera.y), 32, 32, (int)(angle * (180 / PI)));
 		} else {
 			if (count == framesPerFrame) {
 				count = 0;
@@ -352,9 +452,9 @@ void Enemy::draw(SDL_Renderer* renderer, Camera camera) {
 			} else {
 				count++;
 			}
-			render.renderSheetEx(renderer, spriteSheet, node.x - camera.x, node.y - camera.y, 32 * (frame % 3), 32 * floor(frame / 3), 32, 32, 32, 32, angle * (180 / PI));
+			render.renderSheetEx(renderer, spriteSheet, (int)(node.x - camera.x), (int)(node.y - camera.y), (int)(32 * (frame % 3)), (int)(32 * floor(frame / 3)), 32, 32, 32, 32, (int)(angle * (180 / PI)));
 		}
 	} else {
-		render.renderEx(renderer, texture, node.x - camera.x, node.y - camera.y, 32, 32, angle * (180 / PI));
+		render.renderEx(renderer, texture, (int)(node.x - camera.x), (int)(node.y - camera.y), 32, 32, (int)(angle * (180 / PI)));
 	}
 }

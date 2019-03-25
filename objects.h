@@ -17,8 +17,6 @@ public:
 	Camera();
 };
 
-//big boi vignette and stars more dense at center
-
 class Background {
 public:
 	int x, y;
@@ -75,16 +73,28 @@ public:
 	float angle;
 	float velocity;
 
+	int OGTime;//when it was made
 	int lifeTime;//how long it will stick around
 	int timeAlive;//how long it has stuck around
 
-	SDL_Texture* playerProjectile;
-	SDL_Texture* enemyProjectile;
-
 	void move();
-	void draw(SDL_Renderer* renderer, Camera camera);
+	void draw(SDL_Renderer* renderer, Camera camera, SDL_Texture* texture, int diameter);
 
 	Projectile(SDL_Renderer* renderer);
+};
+
+class Particle {
+public:
+	Node node;
+
+	int OGTime;//when it was made
+	int lifeTime;//how long it will stick around
+	int timeAlive;//how long it has stuck around
+
+	void move();
+	void draw(SDL_Renderer* renderer, Camera camera, SDL_Texture* texture);
+
+	Particle();
 };
 
 class Player {
@@ -94,21 +104,32 @@ public:
 
 	float angle;//angle of the 2nd part
 
-	int health;
+	float health;
 	bool hit;//if the player was just hit
 	int invincibility;//how long (in seconds) the player will be invincible after being hit
 	bool invincible;
+	bool dying;//if the player is die
+	bool died;//it heckin died man
+	int frame;//what frame of the animation it is on
+	int count;
+	int frames;//how many frames there are
+	int framesPerFrame;//how fast the animation plays
 
-	int weapon;//what weapon is being used, one is blaster, two is laser, 
-	//three is cannon, four is missiles
+	int weapon;//what weapon is being used, one is blaster, 
+	//two is shotgun, three is laser, four is missiles
+	bool fire;//if the player is going to fire
+	int fireRate1;//how often it can shoot for weapon 1
+	int fireRate2;//how often it can shoot for weapon 2
+	int fireRate3;//how often it can shoot for weapon 3
+	int lastFire;
 
 	SDL_Texture* texture;
-	SDL_Texture* texture2;
+	SDL_Texture* spriteSheet;
 
 	void asteroidCollision(Asteroid &a);
 	void projectileCollision(std::vector<Projectile> &projectiles);
 
-	void shoot(std::vector<Projectile> &projectiles);
+	void shoot(std::vector<Projectile> &projectiles, SDL_Renderer* renderer);
 
 	void move(SDL_Event &e, int mX, int mY);
 	void draw(SDL_Renderer* renderer, Camera camera);
@@ -130,6 +151,7 @@ public:
 	Point target;//where it will attack
 
 	int health;
+	int value;
 
 	int lastShotTime;//the time boi last shot
 	int fireRate;//how many seconds between each shot
@@ -151,6 +173,7 @@ public:
 	void move(Player player);
 	void playerCollision(Player &player);
 	void avoidEnemies(std::vector<Enemy> &enemies);
+	bool projectileCollision(Projectile &projectile);
 	void shoot(std::vector<Projectile> &projectiles, SDL_Renderer* renderer);
 	void draw(SDL_Renderer* renderer, Camera camera);
 
